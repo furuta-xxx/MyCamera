@@ -16,38 +16,31 @@ struct ContentView: View {
     var body: some View {
         VStack {
             Spacer()
-            if let captureImage {
-                Image(uiImage: captureImage)
-                    .resizable()
-                    .scaledToFit()
-            }
-            Spacer()
             Button {
                 if UIImagePickerController.isSourceTypeAvailable(.camera) {
                     print("カメラは利用できます")
+                    captureImage = nil
                     isShowSheet.toggle()
                 } else {
                     print("カメラは利用できません")
                 }
             } label: {
                 Text("カメラを起動する")
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 50)
+                    .buttonTextModifier()
                     .multilineTextAlignment(.center)
-                    .background(.blue)
-                    .foregroundStyle(.white)
             }
             .padding()
             .sheet(isPresented: $isShowSheet) {
-                ImagePickerView(isShowSheet: $isShowSheet, captureImage: $captureImage)
+                if let captureImage {
+                    EffectView(isShowSheet: $isShowSheet, captureImage: captureImage)
+                } else {
+                    ImagePickerView(isShowSheet: $isShowSheet, captureImage: $captureImage)
+                }
             }
             
             PhotosPicker(selection: $photoPickerSelectedImage, matching: .images, preferredItemEncoding: .automatic, photoLibrary: .shared()) {
                 Text("フォトライブラリーから選択する")
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 50)
-                    .background(.blue)
-                    .foregroundStyle(.white)
+                    .buttonTextModifier()
                     .padding()
             }
             .onChange(of: photoPickerSelectedImage, initial: true, { oldValue, newValue in
@@ -59,19 +52,12 @@ struct ContentView: View {
                     }
                 }
             })
-            
-            if let captureImage {
-                let shareImage = Image(uiImage: captureImage)
-                ShareLink(item: shareImage, subject: nil, message: nil, preview: SharePreview("Photo", image: shareImage)) {
-                    Text("SNSに投稿する")
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 50)
-                        .background(.blue)
-                        .foregroundStyle(.white)
-                        .padding()
-                }
-            }
         }
+        .onChange(of: captureImage, initial: true, { oldValue, newValue in
+            if let _ = newValue {
+                isShowSheet.toggle()
+            }
+        })
     }
 }
 
